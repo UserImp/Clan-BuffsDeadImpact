@@ -174,7 +174,6 @@
       color: #ffffff;
       box-shadow: 0 0 8px var(--neon-purple);
     }
-
     .clan-rank-wrapper { position: relative; user-select: none; }
 
     .clan-rank-panel {
@@ -420,6 +419,22 @@
 
     .member-input::placeholder { color: #7e5bef; font-weight: 400; }
 
+    .member-hint {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(167, 139, 250, 0.12);
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-align: center;
+      display: none;
+    }
+
+    .member-hint.visible {
+      display: block;
+    }
+
     .member-result-row {
       display: flex;
       justify-content: space-between;
@@ -528,6 +543,7 @@
           oninput="this.value = this.value.replace(/^0+|[^0-9]/g, ''); updateCalculation();"
         />
       </div>
+      <div class="member-hint" id="memberHint"></div>
       <div class="member-result-row">
         <span class="member-result-label">Вклад с одного участника:</span>
         <div class="member-result-prices" id="memberResultPrices">
@@ -619,6 +635,7 @@
   const resultTotalPrices = document.getElementById("resultTotalPrices");
   const memberSplitBox = document.getElementById("memberSplitBox");
   const memberCountInput = document.getElementById("memberCountInput");
+  const memberHint = document.getElementById("memberHint");
   const memberResultPrices = document.getElementById("memberResultPrices");
   const clanRemainderRow = document.getElementById("clanRemainderRow");
   const clanRemainderPrices = document.getElementById("clanRemainderPrices");
@@ -669,6 +686,7 @@
       rankDropdown.appendChild(option);
     });
   }
+
   function selectRank(rank) {
     selectedRankId = rank.id;
     selectedRankDisplay.style.color = "";
@@ -755,6 +773,7 @@
       resultList.classList.add("single-item");
       memberResultPrices.innerHTML = `<span class="member-caps-value empty">—</span>`;
       clanRemainderRow.style.display = "none";
+      memberHint.classList.remove("visible");
       return;
     }
 
@@ -804,10 +823,20 @@
     if (hasUnknown) {
       memberResultPrices.innerHTML = `<span class="cost-unknown">-</span>`;
       clanRemainderRow.style.display = "none";
+      memberHint.classList.remove("visible");
     } else if (!memberCount || memberCount < 1) {
       memberResultPrices.innerHTML = `<span class="member-caps-value empty">—</span>`;
       clanRemainderRow.style.display = "none";
+      memberHint.classList.remove("visible");
     } else {
+      if (memberCount > totalTokens) {
+        const tokenWord = declOfNum(totalTokens, "токен", "токена", "токенов");
+        memberHint.textContent = `Участников больше, чем нужно токенов. Достаточно ${formatNumber(totalTokens)} чел. по 1 токену (всего ${formatNumber(totalTokens)} ${tokenWord}).`;
+        memberHint.classList.add("visible");
+      } else {
+        memberHint.classList.remove("visible");
+      }
+
       const tokensPerMember = Math.ceil(totalTokens / memberCount);
       const capsPerMember = tokensPerMember * CAPS_PER_TOKEN;
       const memberTokenWord = declOfNum(tokensPerMember, "токен.", "токена.", "токенов.");
